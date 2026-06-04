@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestione Sostituzioni — Liceo Labriola</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f4f3ef; --surface:#fff; --surface2:#f8f7f3; --border:#e2dfd8;
+  --ink:#1a1814; --ink2:#6b6760; --ink3:#b0ada8;
+  --blue:#1a56db; --blue-light:#eef2ff; --blue-mid:#c7d5f8;
+  --green:#0e7a5a; --green-light:#ecfdf5; --green-mid:#a7f0d3;
+  --orange:#c45c00; --orange-light:#fff7ed; --orange-mid:#fdd8a8;
+  --red:#c0392b; --red-light:#fef2f2; --red-mid:#fecaca;
+  --purple:#5b21b6; --purple-light:#f5f3ff;
+  --mono:'DM Mono',monospace; --sans:'DM Sans',sans-serif;
+  --r:10px; --r-sm:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);min-height:100vh}
+
+/* ── HEADER ── */
+header{background:var(--ink);color:#fff;padding:18px 32px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.hbadge{background:var(--blue);border-radius:8px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:500;font-size:14px;flex-shrink:0}
+header h1{font-size:16px;font-weight:600;letter-spacing:.02em}
+header p{font-size:12px;color:#9ca3af;font-family:var(--mono)}
+.hright{margin-left:auto;display:flex;align-items:center;gap:10px}
+#statusPill{padding:6px 14px;border-radius:20px;font-family:var(--mono);font-size:11px;font-weight:500;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#d1d5db}
+
+/* ── LAYOUT ── */
+.wrap{max-width:1200px;margin:0 auto;padding:28px 20px;display:grid;grid-template-columns:320px 1fr;gap:22px;align-items:start}
+@media(max-width:820px){.wrap{grid-template-columns:1fr}}
+
+/* ── CARD ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:18px}
+.card-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;background:var(--surface2)}
+.card-head h2{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);flex:1}
+.card-head .ico{font-size:15px}
+.card-body{padding:18px}
+.badge-count{background:var(--blue-light);color:var(--blue);border-radius:10px;font-family:var(--mono);font-size:10px;font-weight:500;padding:2px 8px}
+
+/* ── FORM ELEMENTS ── */
+label.fl{display:block;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);margin-bottom:5px}
+input[type=text],input[type=date],select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--ink);font-family:var(--mono);font-size:13px;padding:8px 11px;outline:none;transition:border-color .18s}
+input:focus,select:focus{border-color:var(--blue)}
+input::placeholder{color:var(--ink3)}
+.fg{margin-bottom:12px}
+
+/* ── DATE ROW ── */
+.date-row{display:flex;gap:10px;align-items:flex-end;margin-bottom:16px}
+.date-row .fg{margin:0;flex:1}
+#giornoChip{padding:7px 14px;border-radius:var(--r-sm);background:var(--green-light);color:var(--green);font-family:var(--mono);font-size:12px;font-weight:500;white-space:nowrap;border:1px solid var(--green-mid)}
+
+/* ── AUTOCOMPLETE ── */
+.ac-wrap{position:relative;margin-bottom:12px}
+.ac-wrap input{width:100%}
+.ac-drop{position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);margin-top:3px;max-height:180px;overflow-y:auto;z-index:80;display:none;box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.ac-drop.open{display:block}
+.ac-item{padding:8px 12px;font-family:var(--mono);font-size:12px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .12s}
+.ac-item:last-child{border:none}
+.ac-item:hover{background:var(--blue-light);color:var(--blue)}
+
+/* ── TIPO TOGGLE ── */
+.tipo-row{display:flex;gap:6px;margin-bottom:14px}
+.tipo-btn{flex:1;padding:8px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--surface2);color:var(--ink2);font-family:var(--mono);font-size:11px;font-weight:500;cursor:pointer;text-align:center;transition:all .15s}
+.tipo-btn.ta{background:var(--red-light);border-color:var(--red-mid);color:var(--red)}
+.tipo-btn.tp{background:var(--orange-light);border-color:var(--orange-mid);color:var(--orange)}
+
+/* ── ORE GRID ── */
+.ore-wrap{display:none;margin-bottom:12px}
+.ore-wrap.vis{display:block}
+.ore-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin-top:6px}
+.ora-cb{padding:7px 0;border-radius:5px;border:1px solid var(--border);background:var(--surface2);color:var(--ink2);font-family:var(--mono);font-size:11px;font-weight:500;text-align:center;cursor:pointer;transition:all .15s;user-select:none}
+.ora-cb.on{background:var(--orange-light);border-color:var(--orange-mid);color:var(--orange)}
+.ora-cb:hover:not(.on){border-color:var(--blue);color:var(--blue)}
+
+/* ── BTN ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;border-radius:var(--r-sm);font-family:var(--sans);font-weight:600;cursor:pointer;transition:all .15s}
+.btn-primary{background:var(--blue);color:#fff;padding:9px 18px;font-size:13px;width:100%;margin-top:4px}
+.btn-primary:hover{background:#1648c2}
+.btn-sm{background:var(--blue-light);color:var(--blue);padding:6px 12px;font-size:12px}
+.btn-sm:hover{background:var(--blue-mid)}
+.btn-danger{background:var(--red-light);color:var(--red);padding:5px 10px;font-size:11px;border:1px solid var(--red-mid)}
+.btn-ghost{background:none;color:var(--ink3);padding:4px;font-size:16px;line-height:1}
+.btn-ghost:hover{color:var(--red)}
+.btn-generate{background:var(--ink);color:#fff;padding:13px 18px;font-size:14px;font-weight:700;width:100%;border-radius:var(--r);letter-spacing:.03em}
+.btn-generate:hover{background:#2d2d2d}
+
+/* ── ABSENT TAGS ── */
+.absent-list{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.absent-tag{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 13px;display:flex;align-items:flex-start;gap:8px}
+.at-name{font-family:var(--mono);font-weight:500;font-size:13px;flex:1}
+.at-sub{font-size:11px;color:var(--ink2);font-family:var(--mono);margin-top:2px}
+.at-badge{font-size:10px;font-family:var(--mono);font-weight:600;padding:2px 7px;border-radius:4px;white-space:nowrap}
+.at-badge.a{background:var(--red-light);color:var(--red)}
+.at-badge.p{background:var(--orange-light);color:var(--orange)}
+
+/* ── IU / CA FORM ── */
+.mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mini-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.btn-add-row{background:var(--green-light);border:1px solid var(--green-mid);color:var(--green);padding:8px;font-size:12px;font-weight:600;border-radius:var(--r-sm);width:100%;margin-top:6px;cursor:pointer;font-family:var(--sans);transition:background .15s}
+.btn-add-row:hover{background:var(--green-mid)}
+.mini-list{display:flex;flex-direction:column;gap:5px;margin-top:8px}
+.mini-item{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:7px 10px;display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px}
+.mi-label{font-weight:600;color:var(--ink);min-width:35px}
+.mi-info{color:var(--ink2);flex:1}
+
+/* ── RIGHT: ORE SCOPERTE ── */
+.ora-block{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:14px}
+.ob-head{padding:11px 16px;display:flex;align-items:center;gap:10px;background:var(--surface2);border-bottom:1px solid var(--border)}
+.ob-ora{background:var(--blue);color:#fff;border-radius:5px;font-family:var(--mono);font-weight:500;font-size:12px;padding:3px 9px}
+.ob-classe{font-family:var(--mono);font-weight:500;font-size:13px;flex:1}
+.ob-aula{font-size:11px;color:var(--ink2);font-family:var(--mono)}
+.ob-chi{font-size:11px;font-family:var(--mono);font-weight:600;padding:2px 8px;border-radius:4px}
+.ob-chi.a{background:var(--red-light);color:var(--red)}
+.ob-chi.p{background:var(--orange-light);color:var(--orange)}
+
+/* Suggeriti */
+.sugg-row{padding:9px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+.sugg-lbl{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);white-space:nowrap}
+.chip{font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:20px;cursor:pointer;transition:all .15s;font-weight:500;border:1px solid transparent}
+.chip.disp{background:var(--green-light);border-color:var(--green-mid);color:var(--green)}
+.chip.disp:hover{background:var(--green-mid)}
+.chip.buco{background:var(--blue-light);border-color:var(--blue-mid);color:var(--blue)}
+.chip.buco:hover{background:var(--blue-mid)}
+.chip.sel{outline:2px solid var(--ink);outline-offset:1px}
+.chip-legend{font-size:10px;color:var(--ink3);font-family:var(--mono);display:flex;gap:8px;flex-wrap:wrap;padding:0 16px 8px;border-bottom:1px solid var(--border)}
+.cl-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:3px}
+
+/* Assign row */
+.assign-row{padding:10px 16px;display:flex;gap:7px;align-items:center}
+.ai{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--ink);font-family:var(--mono);font-size:12px;padding:7px 10px;outline:none}
+.ai:focus{border-color:var(--blue)}
+.ai::placeholder{color:var(--ink3)}
+.ai-aula{width:72px}
+.btn-ok{background:var(--ink);color:#fff;border:none;border-radius:5px;font-family:var(--mono);font-size:11px;font-weight:500;padding:7px 13px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-ok:hover{background:var(--blue)}
+.btn-ok.saved{background:var(--green);cursor:default}
+
+/* Soluzione ingresso/uscita */
+.iu-suggestion{padding:10px 16px;background:var(--orange-light);border-top:1px solid var(--orange-mid)}
+.iu-s-label{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--orange);margin-bottom:4px}
+.iu-s-text{font-size:12px;color:var(--orange);font-family:var(--mono)}
+.iu-s-btn{margin-top:6px;background:var(--orange);border:none;border-radius:5px;color:#fff;font-family:var(--mono);font-size:11px;font-weight:600;padding:5px 12px;cursor:pointer}
+
+/* ── TABELLA OUTPUT ── */
+.output-section{display:none}
+.output-section.vis{display:block}
+.tbl-wrap{overflow-x:auto;margin-top:14px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--ink);color:#fff;padding:9px 13px;font-family:var(--mono);font-weight:500;font-size:11px;letter-spacing:.04em;text-align:left;white-space:nowrap}
+td{padding:8px 13px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:12px;vertical-align:top}
+tr:nth-child(even) td{background:var(--surface2)}
+tr:hover td{background:var(--blue-light)}
+.tbl-section-head td{background:var(--ink);color:#fff;font-weight:600;font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:6px 13px}
+
+/* Legenda output */
+.out-legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);font-size:11px;font-family:var(--mono);color:var(--ink2)}
+.out-leg-item{display:flex;align-items:center;gap:5px}
+.ol-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+
+/* print */
+@media print{
+  header,.wrap>div:first-child,.generate-section{display:none!important}
+  .output-section{display:block!important}
+  .card{border:none;box-shadow:none}
+  body{background:#fff}
+}
+
+.sep{height:1px;background:var(--border);margin:14px 0}
+.empty{text-align:center;padding:28px 14px;color:var(--ink3);font-family:var(--mono);font-size:12px}
+.empty .ei{font-size:28px;display:block;margin-bottom:8px}
+</style>
+</head>
+<body>
+<header>
+  <div class="hbadge">LL</div>
+  <div>
+    <h1>GESTIONE SOSTITUZIONI</h1>
+    <p>Liceo Labriola — Vicepresidenza</p>
+  </div>
+  <div class="hright">
+    <div id="statusPill">⏳ Caricamento orari...</div>
+  </div>
+</header>
+
+<div class="wrap">
+<!-- ══ LEFT ══ -->
+<div>
+
+  <!-- Data -->
+  <div class="card">
+    <div class="card-head"><span class="ico">📅</span><h2>Data</h2></div>
+    <div class="card-body">
+      <div class="date-row">
+        <div class="fg"><label class="fl">Data</label><input type="date" id="dataInput"></div>
+        <div id="giornoChip">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Docenti -->
+  <div class="card">
+    <div class="card-head"><span class="ico">👤</span><h2>Docenti assenti / permesso</h2><span class="badge-count" id="cntAss">0</span></div>
+    <div class="card-body">
+      <div class="fg">
+        <label class="fl">Cerca docente</label>
+        <div class="ac-wrap">
+          <input type="text" id="tsearch" placeholder="Cognome..." autocomplete="off">
+          <div class="ac-drop" id="acDrop"></div>
+        </div>
+      </div>
+      <label class="fl">Tipo assenza</label>
+      <div class="tipo-row">
+        <div class="tipo-btn ta" id="btnA" onclick="setTipo('a')">🔴 Assente (tutto il giorno)</div>
+        <div class="tipo-btn" id="btnP" onclick="setTipo('p')">🟠 Permesso orario</div>
+      </div>
+      <div class="ore-wrap" id="oreWrap">
+        <label class="fl">Ore di permesso</label>
+        <div class="ore-grid" id="oreGrid"></div>
+      </div>
+      <button class="btn btn-primary" onclick="addDocente()">＋ Aggiungi docente</button>
+      <div class="absent-list" id="absList">
+        <div class="empty"><span class="ei">👋</span>Nessun docente inserito</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ingressi / Uscite manuali -->
+  <div class="card">
+    <div class="card-head"><span class="ico">🚪</span><h2>Ingressi / Uscite variate</h2><span class="badge-count" id="cntIU">0</span></div>
+    <div class="card-body">
+      <div class="mini-grid3">
+        <div class="fg"><label class="fl">Classe</label><input type="text" id="iuC" placeholder="Es. 3A"></div>
+        <div class="fg"><label class="fl">Ingresso</label><input type="text" id="iuI" placeholder="9.10"></div>
+        <div class="fg"><label class="fl">Uscita</label><input type="text" id="iuU" placeholder="13.05"></div>
+      </div>
+      <div class="mini-grid">
+        <div class="fg"><label class="fl">Sostituzione (opz.)</label><input type="text" id="iuS" placeholder="Es. ROSSI in 2h"></div>
+        <div class="fg"><label class="fl">Aula (opz.)</label><input type="text" id="iuA" placeholder="Es. 108"></div>
+      </div>
+      <button class="btn-add-row" onclick="addIU()">＋ Aggiungi</button>
+      <div class="mini-list" id="iuList"></div>
+    </div>
+  </div>
+
+  <!-- Cambi aula -->
+  <div class="card">
+    <div class="card-head"><span class="ico">🔄</span><h2>Cambi aula</h2><span class="badge-count" id="cntCA">0</span></div>
+    <div class="card-body">
+      <div class="mini-grid3">
+        <div class="fg"><label class="fl">Ora</label><input type="text" id="caO" placeholder="Es. 2"></div>
+        <div class="fg"><label class="fl">Classe</label><input type="text" id="caC" placeholder="Es. 2A"></div>
+        <div class="fg"><label class="fl">Aula</label><input type="text" id="caA" placeholder="Es. 215"></div>
+      </div>
+      <button class="btn-add-row" onclick="addCA()">＋ Aggiungi</button>
+      <div class="mini-list" id="caList"></div>
+    </div>
+  </div>
+
+</div><!-- /left -->
+
+<!-- ══ RIGHT ══ -->
+<div>
+
+  <!-- Ore scoperte -->
+  <div class="card">
+    <div class="card-head"><span class="ico">📋</span><h2>Ore scoperte — assegnazione sostituti</h2><span class="badge-count" id="cntSost">0</span></div>
+    <div class="card-body" style="padding:0">
+      <div id="buchiWrap" style="padding:18px">
+        <div class="empty"><span class="ei">👆</span>Inserisci i docenti assenti per vedere le ore da coprire</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Genera tabella -->
+  <div class="card generate-section">
+    <div class="card-head"><span class="ico">⚡</span><h2>Genera tabelle comunicazione</h2></div>
+    <div class="card-body">
+      <button class="btn btn-generate" onclick="generaTabelle()">⚡ GENERA TABELLE</button>
+    </div>
+  </div>
+
+  <!-- Output -->
+  <div class="output-section" id="outputSection">
+    <div class="card">
+      <div class="card-head"><span class="ico">📄</span><h2>Tabelle pronte</h2>
+        <button class="btn btn-sm" onclick="window.print()" style="margin-left:auto">🖨 Stampa</button>
+      </div>
+      <div class="card-body">
+        <div class="out-legend">
+          <div class="out-leg-item"><div class="ol-dot" style="background:var(--green)"></div>Disposizione (già pagata)</div>
+          <div class="out-leg-item"><div class="ol-dot" style="background:var(--blue)"></div>Supplenza (buco orario)</div>
+          <div class="out-leg-item"><div class="ol-dot" style="background:var(--orange)"></div>Ingresso posticipato / uscita anticipata</div>
+        </div>
+        <div id="outputContent"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /right -->
+</div><!-- /wrap -->
+
+<script>
+// ══════════════════════════════════════════════════
+//  COSTANTI E STATO
+// ══════════════════════════════════════════════════
+const BASE = 'https://raw.githubusercontent.com/profzammataro/orariodoc/main/';
+const GIORNI = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì'];
+const ORE_LABEL = ['1ª','2ª','3ª','4ª','5ª','6ª'];
+
+let docDict={}, clsDict={}, aulDict={};
+let docenti=[];
+let assenti=[];      // {nome, tipo:'a'|'p', ore:[1..6]}
+let sostituzioni=[]; // {_key, classe, ora, aula, docente, tipoSost:'disp'|'buco'|'iu'}
+let iuItems=[];
+let caItems=[];
+let selectedTipo='a';
+let selectedOre=new Set();
+let selTeacher='';
+
+// ══════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════
+async function init(){
+  // Data default: prossimo giorno scolastico
+  const d=new Date(); d.setDate(d.getDate()+1);
+  if(d.getDay()===0) d.setDate(d.getDate()+1);
+  if(d.getDay()===6) d.setDate(d.getDate()+2);
+  document.getElementById('dataInput').value=d.toISOString().split('T')[0];
+  aggiornaGiorno();
+
+  buildOreGrid();
+
+  try{
+    const [r1,r2,r3]=await Promise.all([
+      fetch(BASE+'doc_dict.json'),
+      fetch(BASE+'class_dict.json'),
+      fetch(BASE+'aule_dict.json')
+    ]);
+    [docDict,clsDict,aulDict]=await Promise.all([r1.json(),r2.json(),r3.json()]);
+    docenti=Object.keys(docDict).sort();
+    pill(`✅ ${docenti.length} docenti caricati`,'ok');
+  }catch(e){
+    pill('❌ Errore caricamento JSON','err');
+    console.error(e);
+  }
+
+  document.getElementById('dataInput').addEventListener('change',()=>{aggiornaGiorno();renderBuchi();});
+  document.getElementById('tsearch').addEventListener('input',onSearch);
+  document.addEventListener('click',e=>{
+    if(!e.target.closest('.ac-wrap')) document.getElementById('acDrop').classList.remove('open');
+  });
+}
+
+function pill(txt,tipo){
+  const el=document.getElementById('statusPill');
+  el.textContent=txt;
+  if(tipo==='ok'){el.style.background='rgba(14,122,90,.2)';el.style.color='#6ee7b7';el.style.borderColor='rgba(14,122,90,.3)';}
+  if(tipo==='err'){el.style.background='rgba(192,57,43,.2)';el.style.color='#fca5a5';el.style.borderColor='rgba(192,57,43,.3)';}
+}
+
+// ══════════════════════════════════════════════════
+//  DATA / GIORNO
+// ══════════════════════════════════════════════════
+function aggiornaGiorno(){
+  const val=document.getElementById('dataInput').value;
+  if(!val)return;
+  const d=new Date(val+'T12:00:00');
+  const dow=d.getDay()-1; // 0=Lun..4=Ven
+  const chip=document.getElementById('giornoChip');
+  if(dow<0||dow>4){
+    chip.textContent='⚠️ Weekend';
+    chip.style.background='var(--red-light)';chip.style.color='var(--red)';chip.style.borderColor='var(--red-mid)';
+  }else{
+    chip.textContent=GIORNI[dow];
+    chip.style.background='var(--green-light)';chip.style.color='var(--green)';chip.style.borderColor='var(--green-mid)';
+  }
+}
+function getGiornoIdx(){
+  const val=document.getElementById('dataInput').value;
+  if(!val)return-1;
+  return new Date(val+'T12:00:00').getDay()-1;
+}
+function getDataStr(){
+  const val=document.getElementById('dataInput').value;
+  if(!val)return'';
+  const[y,m,g]=val.split('-');return`${g}/${m}/${y}`;
+}
+
+// ══════════════════════════════════════════════════
+//  SLOT HELPERS
+// ══════════════════════════════════════════════════
+function slotIdx(giornoIdx,ora){return giornoIdx*6+(ora-1);}
+
+function parseDocSlot(s){
+  if(!s)return null;
+  const m=s.match(/^([^(]+)\(([^)]+)\)$/);
+  if(m)return{classe:m[1].trim(),aula:m[2].trim()};
+  return{classe:s.trim(),aula:''};
+}
+
+function parseClsSlot(s){
+  if(!s)return null;
+  const m=s.match(/^([^(]+)\(([^)]+)\)\(([^)]+)\)$/);
+  if(m)return{materia:m[1].trim(),docente:m[2].trim(),aula:m[3].trim()};
+  return null;
+}
+
+function isDisp(s){
+  if(!s)return false;
+  return['disp.','disp','d'].includes(s.trim().toLowerCase());
+}
+
+// ══════════════════════════════════════════════════
+//  ORE GRID
+// ══════════════════════════════════════════════════
+function buildOreGrid(){
+  const g=document.getElementById('oreGrid');
+  for(let i=1;i<=6;i++){
+    const d=document.createElement('div');
+    d.className='ora-cb';d.textContent=i+'ª';d.dataset.o=i;
+    d.onclick=()=>{
+      if(selectedOre.has(i)){selectedOre.delete(i);d.classList.remove('on');}
+      else{selectedOre.add(i);d.classList.add('on');}
+    };
+    g.appendChild(d);
+  }
+}
+function resetOre(){selectedOre.clear();document.querySelectorAll('.ora-cb').forEach(b=>b.classList.remove('on'));}
+
+// ══════════════════════════════════════════════════
+//  TIPO TOGGLE
+// ══════════════════════════════════════════════════
+function setTipo(t){
+  selectedTipo=t;
+  document.getElementById('btnA').className='tipo-btn'+(t==='a'?' ta':'');
+  document.getElementById('btnP').className='tipo-btn'+(t==='p'?' tp':'');
+  document.getElementById('oreWrap').className='ore-wrap'+(t==='p'?' vis':'');
+}
+
+// ══════════════════════════════════════════════════
+//  AUTOCOMPLETE
+// ══════════════════════════════════════════════════
+function onSearch(e){
+  const q=e.target.value.trim().toUpperCase();
+  const drop=document.getElementById('acDrop');
+  if(q.length<2){drop.classList.remove('open');return;}
+  const hits=docenti.filter(n=>n.includes(q)).slice(0,10);
+  if(!hits.length){drop.classList.remove('open');return;}
+  drop.innerHTML=hits.map(n=>`<div class="ac-item" onclick="selDoc('${n}')">${n}</div>`).join('');
+  drop.classList.add('open');
+}
+function selDoc(n){
+  selTeacher=n;
+  document.getElementById('tsearch').value=n;
+  document.getElementById('acDrop').classList.remove('open');
+}
+
+// ══════════════════════════════════════════════════
+//  AGGIUNGI DOCENTE
+// ══════════════════════════════════════════════════
+function addDocente(){
+  const nome=(selTeacher||document.getElementById('tsearch').value.trim().toUpperCase());
+  if(!nome){alert('Seleziona un docente.');return;}
+  if(!docDict[nome]){alert(`"${nome}" non trovato nel dizionario docenti.`);return;}
+  if(assenti.find(a=>a.nome===nome)){alert('Docente già inserito.');return;}
+
+  const obj={nome,tipo:selectedTipo,ore:[]};
+  if(selectedTipo==='p'){
+    if(!selectedOre.size){alert('Seleziona almeno un\'ora di permesso.');return;}
+    obj.ore=[...selectedOre].sort((a,b)=>a-b);
+  }else{
+    obj.ore=[1,2,3,4,5,6];
+  }
+  assenti.push(obj);
+  document.getElementById('tsearch').value='';
+  selTeacher='';
+  resetOre();
+  setTipo('a');
+  renderAssenti();
+  renderBuchi();
+}
+
+// ══════════════════════════════════════════════════
+//  RENDER ASSENTI
+// ══════════════════════════════════════════════════
+function renderAssenti(){
+  document.getElementById('cntAss').textContent=assenti.length;
+  const el=document.getElementById('absList');
+  if(!assenti.length){el.innerHTML='<div class="empty"><span class="ei">👋</span>Nessun docente inserito</div>';return;}
+  el.innerHTML=assenti.map((a,i)=>`
+    <div class="absent-tag">
+      <div style="flex:1">
+        <div class="at-name">${a.nome}</div>
+        <div class="at-sub">${a.tipo==='a'?'Tutto il giorno':'Permesso ore: '+a.ore.join(', ')}</div>
+      </div>
+      <div class="at-badge ${a.tipo}">${a.tipo==='a'?'🔴 Assente':'🟠 Permesso'}</div>
+      <button class="btn btn-ghost" onclick="removeAssente(${i})">✕</button>
+    </div>
+  `).join('');
+}
+function removeAssente(i){
+  const nome=assenti[i].nome;
+  assenti.splice(i,1);
+  sostituzioni=sostituzioni.filter(s=>s._owner!==nome);
+  renderAssenti();renderBuchi();
+}
+
+// ══════════════════════════════════════════════════
+//  LOGICA CORE: CALCOLA BUCHI E SUGGERIMENTI
+// ══════════════════════════════════════════════════
+function getLiberi(ora,giornoIdx,escludi){
+  const idx=slotIdx(giornoIdx,ora);
+  const assentiInOra=new Set(
+    assenti.filter(a=>a.ore.includes(ora)).map(a=>a.nome)
+  );
+  const disp=[],buco=[];
+  for(const nome of docenti){
+    if(nome===escludi||assentiInOra.has(nome))continue;
+    const s=(docDict[nome]||[])[idx]||'';
+    if(isDisp(s)) disp.push(nome);
+    else if(!s) buco.push(nome);
+  }
+  return{disp:disp.slice(0,8),buco:buco.slice(0,8)};
+}
+
+// Logica ingresso/uscita: ore scoperte in testa o in coda?
+function suggerisciIU(oreScope, giornoIdx){
+  // Raggruppa per classe
+  const byClasse={};
+  for(const os of oreScope){
+    if(!byClasse[os.classe]) byClasse[os.classe]=[];
+    byClasse[os.classe].push(os.ora);
+  }
+  const suggerimenti=[];
+  for(const[classe,oreArr] of Object.entries(byClasse)){
+    const sorted=[...oreArr].sort((a,b)=>a-b);
+    const prima=sorted[0], ultima=sorted[sorted.length-1];
+    // Prima ora (1 o 2): max posticipo → 3ª ora
+    if(prima<=2) suggerimenti.push({tipo:'ingresso',classe,ora:prima,oraAlt:Math.min(prima+1,3),msg:`Ingresso posticipato: classe ${classe} entra alla ${Math.min(prima+1,3)}ª ora`});
+    // Ultima ora (5 o 6): max uscita → 4ª ora
+    if(ultima>=5) suggerimenti.push({tipo:'uscita',classe,ora:ultima,oraAlt:Math.max(ultima-1,4),msg:`Uscita anticipata: classe ${classe} esce dopo la ${Math.max(ultima-1,4)}ª ora`});
+  }
+  return suggerimenti;
+}
+
+// ══════════════════════════════════════════════════
+//  RENDER BUCHI
+// ══════════════════════════════════════════════════
+function renderBuchi(){
+  const giornoIdx=getGiornoIdx();
+  const wrap=document.getElementById('buchiWrap');
+  if(!assenti.length||giornoIdx<0){
+    wrap.innerHTML='<div class="empty"><span class="ei">👆</span>Inserisci i docenti assenti per vedere le ore da coprire</div>';
+    document.getElementById('cntSost').textContent='0';
+    return;
+  }
+
+  // Raccoglie ore scoperte
+  let oreScope=[];
+  for(const a of assenti){
+    for(const ora of a.ore){
+      const idx=slotIdx(giornoIdx,ora);
+      const slot=(docDict[a.nome]||[])[idx]||'';
+      const parsed=parseDocSlot(slot);
+      if(parsed&&parsed.classe){
+        oreScope.push({ora,docente:a.nome,tipo:a.tipo,...parsed});
+      }
+    }
+  }
+  oreScope.sort((a,b)=>a.ora-b.ora||a.docente.localeCompare(b.docente));
+
+  document.getElementById('cntSost').textContent=oreScope.length;
+
+  if(!oreScope.length){
+    wrap.innerHTML='<div class="empty" style="padding:24px"><span class="ei">✅</span>Nessuna ora scoperta per i docenti inseriti in questo giorno</div>';
+    return;
+  }
+
+  let html='<div class="chip-legend"><span><span class="cl-dot" style="background:var(--green);display:inline-block"></span>Disposizione</span><span><span class="cl-dot" style="background:var(--blue);display:inline-block"></span>Buco orario</span></div>';
+
+  for(const os of oreScope){
+    const key=`${os.docente}_${os.ora}`;
+    const{disp,buco}=getLiberi(os.ora,giornoIdx,os.docente);
+    const sost=sostituzioni.find(s=>s._key===key);
+    const iuSugg=suggerisciIU([os],giornoIdx);
+
+    const chipDisp=disp.map(n=>`<span class="chip disp${sost?.docente===n?' sel':''}" onclick="quickAssign('${key}','${n}','${os.aula}','disp',this)" title="Disposizione">${n}</span>`).join('');
+    const chipBuco=buco.map(n=>`<span class="chip buco${sost?.docente===n?' sel':''}" onclick="quickAssign('${key}','${n}','${os.aula}','buco',this)" title="Buco orario">${n}</span>`).join('');
+    const noLiberi=!disp.length&&!buco.length;
+
+    const iuHTML=iuSugg.length?`
+      <div class="iu-suggestion">
+        <div class="iu-s-label">💡 Alternativa ingresso/uscita</div>
+        ${iuSugg.map((s,i)=>`<div class="iu-s-text">${s.msg}</div>
+          <button class="iu-s-btn" onclick="applicaIU('${key}','${s.tipo}','${s.classe}',${s.oraAlt})">✓ Applica</button>`).join('')}
+      </div>`:'';
+
+    html+=`
+    <div class="ora-block">
+      <div class="ob-head">
+        <span class="ob-ora">${ORE_LABEL[os.ora-1]} ORA</span>
+        <span class="ob-classe">${os.classe}</span>
+        ${os.aula?`<span class="ob-aula">Aula ${os.aula}</span>`:''}
+        <span class="ob-chi ${os.tipo}">${os.docente}</span>
+      </div>
+      <div class="sugg-row">
+        <span class="sugg-lbl">Disponibili →</span>
+        ${chipDisp}${chipBuco}
+        ${noLiberi?'<span style="font-size:11px;color:var(--ink3);font-family:var(--mono)">Nessuno libero</span>':''}
+      </div>
+      <div class="assign-row">
+        <input class="ai" id="doc_${key}" placeholder="Sostituto..." value="${sost?.docente||''}">
+        <input class="ai ai-aula" id="aul_${key}" placeholder="Aula" value="${sost?.aula||os.aula||''}">
+        <button class="btn-ok${sost?'':''}" id="btn_${key}" onclick="assegna('${key}','${os.classe}',${os.ora},'${os.docente}')">✓ Assegna</button>
+      </div>
+      ${noLiberi?iuHTML:''}
+    </div>`;
+  }
+
+  wrap.innerHTML=html;
+}
+
+// ══════════════════════════════════════════════════
+//  ASSEGNAZIONE
+// ══════════════════════════════════════════════════
+function quickAssign(key,nome,aula,tipoSost,el){
+  document.getElementById(`doc_${key}`).value=nome;
+  if(aula) document.getElementById(`aul_${key}`).value=aula;
+  el.closest('.sugg-row').querySelectorAll('.chip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function assegna(key,classe,ora,docenteAssente){
+  const docente=document.getElementById(`doc_${key}`).value.trim().toUpperCase();
+  const aula=document.getElementById(`aul_${key}`).value.trim();
+  if(!docente){alert('Inserisci il nome del sostituto.');return;}
+
+  // Determina tipo sostituzione
+  const giornoIdx=getGiornoIdx();
+  const idx=slotIdx(giornoIdx,ora);
+  const slotSost=(docDict[docente]||[])[idx]||'';
+  const tipoSost=isDisp(slotSost)?'disp':'buco';
+
+  sostituzioni=sostituzioni.filter(s=>s._key!==key);
+  sostituzioni.push({_key:key,_owner:docenteAssente,classe,ora:String(ora),aula,docente,tipoSost});
+
+  const btn=document.getElementById(`btn_${key}`);
+  if(btn){btn.textContent='✓ Salvato';btn.classList.add('saved');setTimeout(()=>{btn.textContent='✓ Assegna';btn.classList.remove('saved');},1800);}
+}
+
+function applicaIU(key,tipo,classe,oraAlt){
+  // Aggiunge automaticamente a iuItems
+  const esistente=iuItems.find(i=>i.classe===classe);
+  if(tipo==='ingresso'){
+    const orario=['','9.10','10.05','11.00','12.00','13.05','14.00'][oraAlt]||'';
+    if(!esistente) iuItems.push({classe,ingresso:orario,uscita:'',sostituzione:'',aula:''});
+    else esistente.ingresso=orario;
+  }else{
+    const orario=['','8.05','9.10','10.05','11.00','12.00','13.05'][oraAlt]||'';
+    if(!esistente) iuItems.push({classe,ingresso:'',uscita:orario,sostituzione:'',aula:''});
+    else esistente.uscita=orario;
+  }
+  // Marca la sostituzione come risolta con IU
+  sostituzioni=sostituzioni.filter(s=>s._key!==key);
+  sostituzioni.push({_key:key,_owner:key.split('_')[0],classe,ora:key.split('_')[1],aula:'',docente:'(ingresso/uscita)',tipoSost:'iu'});
+  renderIUList();
+  renderBuchi();
+}
+
+// ══════════════════════════════════════════════════
+//  INGRESSI / USCITE
+// ══════════════════════════════════════════════════
+function addIU(){
+  const c=document.getElementById('iuC').value.trim().toUpperCase();
+  if(!c){alert('Inserisci la classe.');return;}
+  const i=document.getElementById('iuI').value.trim();
+  const u=document.getElementById('iuU').value.trim();
+  if(!i&&!u){alert('Inserisci ingresso o uscita.');return;}
+  iuItems.push({classe:c,ingresso:i,uscita:u,sostituzione:document.getElementById('iuS').value.trim(),aula:document.getElementById('iuA').value.trim()});
+  ['iuC','iuI','iuU','iuS','iuA'].forEach(id=>document.getElementById(id).value='');
+  renderIUList();
+}
+function renderIUList(){
+  document.getElementById('cntIU').textContent=iuItems.length;
+  const el=document.getElementById('iuList');
+  el.innerHTML=iuItems.map((it,i)=>`
+    <div class="mini-item">
+      <span class="mi-label">${it.classe}</span>
+      <span class="mi-info">${[it.ingresso?'↗'+it.ingresso:'',it.uscita?'↙'+it.uscita:''].filter(Boolean).join(' | ')}${it.sostituzione?' — '+it.sostituzione:''}</span>
+      <button class="btn btn-ghost" onclick="removeIU(${i})">✕</button>
+    </div>`).join('');
+}
+function removeIU(i){iuItems.splice(i,1);renderIUList();}
+
+// ══════════════════════════════════════════════════
+//  CAMBI AULA
+// ══════════════════════════════════════════════════
+function addCA(){
+  const o=document.getElementById('caO').value.trim();
+  const c=document.getElementById('caC').value.trim().toUpperCase();
+  const a=document.getElementById('caA').value.trim();
+  if(!o||!c||!a){alert('Compila tutti i campi.');return;}
+  caItems.push({ora:o,classe:c,aula:a,docente:''});
+  ['caO','caC','caA'].forEach(id=>document.getElementById(id).value='');
+  renderCAList();
+}
+function renderCAList(){
+  document.getElementById('cntCA').textContent=caItems.length;
+  const el=document.getElementById('caList');
+  el.innerHTML=caItems.map((it,i)=>`
+    <div class="mini-item">
+      <span class="mi-label">${it.ora}ª</span>
+      <span class="mi-info">${it.classe} → Aula ${it.aula}</span>
+      <button class="btn btn-ghost" onclick="removeCA(${i})">✕</button>
+    </div>`).join('');
+}
+function removeCA(i){caItems.splice(i,1);renderCAList();}
+
+// ══════════════════════════════════════════════════
+//  GENERA TABELLE
+// ══════════════════════════════════════════════════
+function generaTabelle(){
+  const giornoIdx=getGiornoIdx();
+  if(giornoIdx<0){alert('Seleziona una data valida (lun-ven).');return;}
+
+  const dataStr=getDataStr();
+  const giornoStr=GIORNI[giornoIdx];
+
+  // Sostituzioni finali (escludi quelle IU)
+  const sostFinali=sostituzioni.filter(s=>s.tipoSost!=='iu').sort((a,b)=>{
+    const ca=a.classe.localeCompare(b.classe);
+    return ca||parseInt(a.ora)-parseInt(b.ora);
+  });
+
+  // Ore senza copertura → già gestite come IU?
+  // (controllato tramite presence in iuItems)
+
+  let html=`<h2 style="font-family:var(--mono);font-size:15px;margin-bottom:16px;color:var(--ink)">
+    Comunicazioni del ${giornoStr} ${dataStr}
+  </h2>`;
+
+  // ── Tabella SOSTITUZIONI
+  if(sostFinali.length){
+    html+=`
+    <h3 style="font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);margin-bottom:8px">Sostituzioni</h3>
+    <div class="tbl-wrap"><table>
+      <tr><th>CLASSE</th><th>ORA</th><th>AULA</th><th>DOCENTE SOSTITUTO</th><th>TIPO</th></tr>
+      ${sostFinali.map(s=>`<tr>
+        <td><strong>${s.classe}</strong></td>
+        <td>${s.ora}ª</td>
+        <td>${s.aula||'—'}</td>
+        <td>${s.docente}</td>
+        <td><span style="font-size:10px;padding:2px 7px;border-radius:4px;font-family:var(--mono);font-weight:600;background:${s.tipoSost==='disp'?'var(--green-light)':'var(--blue-light)'};color:${s.tipoSost==='disp'?'var(--green)':'var(--blue)'}">${s.tipoSost==='disp'?'DISP.':'SUPPLENZA'}</span></td>
+      </tr>`).join('')}
+    </table></div>`;
+  }else{
+    html+=`<p style="font-family:var(--mono);font-size:12px;color:var(--ink2);margin-bottom:12px">Nessuna sostituzione assegnata.</p>`;
+  }
+
+  html+='<div class="sep"></div>';
+
+  // ── Tabella INGRESSI / USCITE
+  if(iuItems.length){
+    html+=`
+    <h3 style="font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);margin:14px 0 8px">Ingressi posticipati / Uscite anticipate</h3>
+    <div class="tbl-wrap"><table>
+      <tr><th>CLASSE</th><th>INGRESSO</th><th>USCITA</th><th>NOTE</th><th>AULA</th></tr>
+      ${iuItems.map(it=>`<tr>
+        <td><strong>${it.classe}</strong></td>
+        <td>${it.ingresso||'—'}</td>
+        <td>${it.uscita||'—'}</td>
+        <td>${it.sostituzione||'—'}</td>
+        <td>${it.aula||'—'}</td>
+      </tr>`).join('')}
+    </table></div>`;
+  }
+
+  // ── Tabella CAMBI AULA
+  if(caItems.length){
+    html+=`
+    <h3 style="font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);margin:14px 0 8px">Cambi aula</h3>
+    <div class="tbl-wrap"><table>
+      <tr><th>ORA</th><th>CLASSE</th><th>AULA</th></tr>
+      ${caItems.map(ca=>`<tr>
+        <td>${ca.ora}ª</td>
+        <td><strong>${ca.classe}</strong></td>
+        <td>${ca.aula}</td>
+      </tr>`).join('')}
+    </table></div>`;
+  }
+
+  // ── Riepilogo docenti assenti
+  if(assenti.length){
+    html+=`
+    <div class="sep"></div>
+    <h3 style="font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);margin-bottom:8px">Docenti assenti / permesso</h3>
+    <div class="tbl-wrap"><table>
+      <tr><th>DOCENTE</th><th>TIPO</th><th>ORE</th></tr>
+      ${assenti.map(a=>`<tr>
+        <td><strong>${a.nome}</strong></td>
+        <td>${a.tipo==='a'?'Assente':'Permesso orario'}</td>
+        <td>${a.tipo==='a'?'Tutto il giorno':a.ore.map(o=>o+'ª').join(', ')}</td>
+      </tr>`).join('')}
+    </table></div>`;
+  }
+
+  document.getElementById('outputContent').innerHTML=html;
+  document.getElementById('outputSection').classList.add('vis');
+  document.getElementById('outputSection').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+init();
+</script>
+</body>
+</html>
